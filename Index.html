@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Árbol Mágico: Edición Especial 🌳✨</title>
+    <style>
+        :root {
+            --verde: #4caf50;
+            --azul: #2196f3;
+            --fondo: #fdfaf5;
+            --texto: #3e4f3c;
+        }
+
+        body {
+            text-align: center;
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--fondo);
+            color: var(--texto);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            justify-content: space-around;
+            overflow: hidden;
+        }
+
+        /* --- Contadores de Regalos --- */
+        .gift-counters {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            text-align: left;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 22px;
+            border: 1px solid #eee;
+        }
+
+        /* --- Barra de Emociones --- */
+        .contenedor-emocion { margin-top: 60px; }
+        .barra { display: flex; gap: 6px; justify-content: center; margin-bottom: 5px; }
+        .segmento {
+            width: 35px; height: 12px;
+            background: #eee;
+            border-radius: 4px;
+            transition: all 0.3s;
+            border: 1px solid #ddd;
+        }
+        .verde { background: var(--verde); box-shadow: 0 0 8px var(--verde); }
+        .azul { background: var(--azul); box-shadow: 0 0 8px var(--azul); }
+
+        /* --- Escena del Árbol --- */
+        .escena {
+            position: relative;
+            width: 280px;
+            height: 350px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .mi-imagen {
+            max-width: 100%;
+            max-height: 100%;
+            position: absolute;
+            transition: opacity 0.6s ease-in-out;
+        }
+        #img-feliz { z-index: 2; opacity: 1; }
+        #img-triste { z-index: 1; opacity: 0; }
+
+        /* --- Mensajes --- */
+        .peticion { font-size: 22px; font-weight: bold; min-height: 30px; transition: color 0.3s; }
+        .feedback { font-style: italic; color: #666; font-size: 16px; padding: 0 20px; min-height: 20px; }
+
+        /* --- Controles de Herramientas --- */
+        .controles { display: flex; gap: 15px; margin-bottom: 20px; }
+        .tool-button {
+            background: none; border: none; padding: 0; cursor: pointer;
+            transition: transform 0.2s; width: 90px; height: 90px;
+        }
+        .tool-button img { max-width: 100%; max-height: 100%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .tool-button:active { transform: scale(0.9); }
+    </style>
+</head>
+<body>
+
+    <div class="gift-counters">
+        <div>🌸 <span id="c-flor">0</span></div>
+        <div>🍃 <span id="c-hoja">0</span></div>
+        <div>🍎 <span id="c-manzana">0</span></div>
+    </div>
+
+    <div class="contenedor-emocion">
+        <div class="barra" id="barra">
+            <div class="segmento"></div><div class="segmento"></div>
+            <div class="segmento"></div><div class="segmento"></div>
+            <div class="segmento"></div>
+        </div>
+        <div id="estado-texto">Estado: ¡Feliz! ✨</div>
+    </div>
+
+    <div class="escena">
+        <img id="img-feliz" src="arbol_feliz.png" alt="Feliz" class="mi-imagen">
+        <img id="img-triste" src="arbol_triste.png" alt="Triste" class="mi-imagen">
+    </div>
+
+    <div>
+        <div id="peticion" class="peticion">El árbol descansa...</div>
+        <p id="feedback" class="feedback">¡Pronto pedirá algo!</p>
+    </div>
+
+    <div class="controles">
+        <button class="tool-button" onclick="dar('Agua')">
+            <img src="herramienta_agua.png" alt="Agua">
+        </button>
+        <button class="tool-button" onclick="dar('Tijeras')">
+            <img src="herramienta_tijeras.png" alt="Tijeras">
+        </button>
+        <button class="tool-button" onclick="dar('Fertilizante')">
+            <img src="herramienta_fertilizante.png" alt="Fertilizante">
+        </button>
+    </div>
+
+    <script>
+        let flores = 0, hojas = 0, manzanas = 0;
+        let nivelEmocion = 5, esTriste = false, pedidoActual = "";
+        let tiempoEspera;
+
+        const m_gracias = ["¡Gracias! Me siento genial 🩵", "¡Qué amable eres! ✨", "¡Justo lo que quería! 🥰"];
+        const m_tristes = ["Se me cayó una hoja... 🍂", "Me siento un poco mal 🥀", "Tal vez luego... 😢"];
+
+        function actualizarVisual() {
+            const segmentos = document.querySelectorAll('.segmento');
+            segmentos.forEach((s, i) => {
+                s.className = 'segmento' + (i < nivelEmocion ? (esTriste ? ' azul' : ' verde') : '');
+            });
+
+            const imgFeliz = document.getElementById('img-feliz');
+            const imgTriste = document.getElementById('img-triste');
+            
+            if (esTriste) {
+                imgFeliz.style.opacity = '0';
+                imgTriste.style.opacity = '1';
+                document.getElementById('estado-texto').innerText = "Estado: Recuperándose... 💙";
+                document.getElementById('peticion').style.color = "#7d2e2e";
+            } else {
+                imgFeliz.style.opacity = '1';
+                imgTriste.style.opacity = '0';
+                document.getElementById('estado-texto').innerText = "Estado: ¡Feliz! ✨";
+                document.getElementById('peticion').style.color = "#2e7d32";
+            }
+        }
+
+        function pedirAlgo() {
+            if (pedidoActual !== "") return;
+            const opciones = ['Agua', 'Tijeras', 'Fertilizante'];
+            pedidoActual = opciones[Math.floor(Math.random() * opciones.length)];
+            
+            document.getElementById('peticion').innerText = "¡Necesito " + pedidoActual + "!";
+            document.getElementById('feedback').innerText = "¡Tienes 5 segundos! ⚡";
+            
+            tiempoEspera = setTimeout(() => {
+                if (pedidoActual !== "") fallar("¡Muy lento! ⏰");
+            }, 5000);
+        }
+
+        function dar(objeto) {
+            if (pedidoActual === "") return;
+            clearTimeout(tiempoEspera);
+
+            if (objeto === pedidoActual) {
+                if (esTriste) {
+                    nivelEmocion--;
+                    if (nivelEmocion <= 0) { esTriste = false; nivelEmocion = 1; }
+                    document.getElementById('feedback').innerText = "Gracias por ayudarme a sanar 💙";
+                } else {
+                    if (nivelEmocion < 5) nivelEmocion++;
+                    darRegalo();
+                }
+                pedidoActual = "";
+                document.getElementById('peticion').innerText = "✨ ¡Conseguido! ✨";
+            } else {
+                fallar("¡Esa herramienta no era! ❌");
+            }
+            actualizarVisual();
+        }
+
+        function fallar(motivo) {
+            if (!esTriste) {
+                nivelEmocion--;
+                if (nivelEmocion <= 0) { esTriste = true; nivelEmocion = 1; }
+            } else {
+                if (nivelEmocion < 5) nivelEmocion++;
+            }
+            document.getElementById('feedback').innerText = motivo + " " + m_tristes[Math.floor(Math.random()*m_tristes.length)];
+            document.getElementById('peticion').innerText = "¡Oh no! 🥀";
+            pedidoActual = "";
+            actualizarVisual();
+        }
+
+        function darRegalo() {
+            let suerte = Math.floor(Math.random() * 100) + 1;
+            let regalo = "";
+            if (suerte <= 50) { 
+                hojas++; document.getElementById('c-hoja').innerText = hojas; regalo = "una 🍃"; 
+            } else if (suerte <= 85) { 
+                flores++; document.getElementById('c-flor').innerText = flores; regalo = "una 🌸"; 
+            } else { 
+                manzanas++; document.getElementById('c-manzana').innerText = manzanas; regalo = "una 🍎"; 
+            }
+            document.getElementById('feedback').innerText = m_gracias[Math.floor(Math.random()*m_gracias.length)] + " Toma " + regalo;
+        }
+
+        setInterval(pedirAlgo, 15000); // Intenta pedir cada 15 segundos
+        actualizarVisual();
+    </script>
+</body>
+</html>
