@@ -8,7 +8,8 @@
         :root {
             --fondo: #FDFBF6;
             --texto: #4A5D4E;
-            --primario: #FF9AA2; /* Color de la barra */
+            --feliz: #A8E6CF; /* Color cuando está feliz */
+            --triste: #9FB4C7; /* Color cuando está triste */
         }
 
         body {
@@ -17,150 +18,256 @@
             background: var(--fondo);
             color: var(--texto);
             margin: 0;
-            padding: 20px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* --- ESTILO DE LAS BARRITAS --- */
+        /* --- PANEL DE INVENTARIO PERFECTAMENTE ALINEADO --- */
+        .panel-recompensas {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            background: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+            border: 1px solid #F0F0F0;
+        }
+
+        .item-recompensa {
+            font-size: 1.3rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* --- BARRITA DINÁMICA (FELICIDAD/TRISTEZA) --- */
         .contenedor-barra {
-            width: 200px;
-            height: 12px;
-            background-color: #E0E0E0;
+            width: 220px;
+            height: 14px;
+            background-color: #EAEAEA; /* Fondo de la barra */
             border-radius: 10px;
-            margin: 5px auto 15px;
+            margin: 10px auto 25px;
             overflow: hidden;
-            border: 1px solid #D1D1D1;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .progreso {
             height: 100%;
-            background-color: var(--primario);
-            width: 100%; /* Esto cambiará con JS */
-            transition: width 0.5s ease-in-out;
+            width: 100%;
+            transition: width 0.6s ease, background-color 0.6s ease;
+            border-radius: 10px;
         }
 
-        /* --- ALINEACIÓN DE HERRAMIENTAS --- */
+        /* --- IMÁGENES Y TEXTOS --- */
+        #imagen-arbol {
+            width: 260px;
+            max-width: 90%;
+            margin: 0 auto 15px auto;
+            display: block;
+            transition: opacity 0.3s;
+        }
+
+        .textos-estado {
+            min-height: 80px; /* Evita que la pantalla brinque */
+        }
+
+        h2 { margin: 5px 0; font-size: 1.4rem; color: #333; }
+        p { margin: 0; color: #777; font-style: italic; }
+
+        #aviso-regalo {
+            color: #FF9AA2;
+            font-weight: bold;
+            font-size: 1.1rem;
+            height: 25px;
+            margin-top: 10px;
+        }
+
+        /* --- HERRAMIENTAS CENTRADAS --- */
         .contenedor-herramientas {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px; /* Espacio entre ellas */
-            margin-top: 30px;
-            flex-wrap: wrap;
+            gap: 25px;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
         }
 
         .herramienta {
             width: 70px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .herramienta:hover {
-            transform: scale(1.1);
-        }
+        .herramienta:active { transform: scale(0.85); }
 
-        #imagen-arbol {
-            width: 280px;
-            margin: 20px auto;
-            display: block;
-        }
-
-        .stats-container {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
     </style>
 </head>
 <body>
 
-    <div class="stats-container">Estado: <span id="estado-texto">¡Feliz! ✨</span></div>
+    <div class="panel-recompensas">
+        <div class="item-recompensa">🍃 <span id="txt-hojas">0</span></div>
+        <div class="item-recompensa">🌸 <span id="txt-flores">0</span></div>
+        <div class="item-recompensa">🍎 <span id="txt-manzanas">0</span></div>
+    </div>
+
+    <div style="font-weight: bold; font-size: 1.1rem;">Estado: <span id="estado-texto">¡Feliz! ✨</span></div>
+    
     <div class="contenedor-barra">
-        <div id="barra-felicidad" class="progreso"></div>
+        <div id="barra-felicidad" class="progreso" style="background-color: var(--feliz);"></div>
     </div>
 
     <img id="imagen-arbol" src="arbol_feliz.png" alt="Tu plantita">
 
-    <h2 id="mensaje-peticion">El árbol descansa...</h2>
-    <p id="sub-mensaje">¡Pronto pedirá algo!</p>
+    <div class="textos-estado">
+        <h2 id="mensaje-peticion">El árbol descansa...</h2>
+        <p id="sub-mensaje">¡Pronto pedirá algo!</p>
+        <div id="aviso-regalo"></div>
+    </div>
 
     <div class="contenedor-herramientas">
-        <img src="herramienta_agua.png" class="herramienta" onclick="atender('sed')">
-        <img src="herramienta_tijeras.png" class="herramienta" onclick="atender('crecido')">
-        <img src="herramienta_fertilizante.png" class="herramienta" onclick="atender('hambre')">
+        <img src="herramienta_agua.png" class="herramienta" onclick="atender('sed')" alt="Agua">
+        <img src="herramienta_tijeras.png" class="herramienta" onclick="atender('crecido')" alt="Tijeras">
+        <img src="herramienta_fertilizante.png" class="herramienta" onclick="atender('hambre')" alt="Fertilizante">
     </div>
 
     <script>
+        // Variables principales
         let felicidad = 100;
         let necesidadActual = "ninguna";
+        
+        // Inventario de regalos
+        let hojas = 0;
+        let flores = 0;
+        let manzanas = 0;
 
-        // 1. FUNCIÓN PARA CARGAR
+        // 1. CARGAR Y GUARDAR (Memoria del juego)
         function cargar() {
-            const guardado = localStorage.getItem('progresoPlantita');
-            if (guardado) {
-                felicidad = parseInt(guardado);
+            const data = JSON.parse(localStorage.getItem('kratasSaveDefinitivo'));
+            if (data) {
+                felicidad = data.felicidad !== undefined ? data.felicidad : 100;
+                hojas = data.hojas || 0;
+                flores = data.flores || 0;
+                manzanas = data.manzanas || 0;
             }
             actualizarUI();
             iniciarCiclo();
         }
 
-        // 2. LÓGICA DE NECESIDADES (El juego te pedirá cosas)
+        function guardar() {
+            const data = { felicidad, hojas, flores, manzanas };
+            localStorage.setItem('kratasSaveDefinitivo', JSON.stringify(data));
+        }
+
+        // 2. EL CICLO DE VIDA DEL ÁRBOL
         function iniciarCiclo() {
             setInterval(() => {
                 if (necesidadActual === "ninguna") {
-                    const azar = Math.random();
-                    if (azar < 0.3) pedirAlgo();
+                    if (Math.random() < 0.35) pedirAlgo(); // 35% de probabilidad de pedir algo cada 6 seg
                 } else {
-                    // Si tiene una necesidad y no la atiendes, baja la felicidad
-                    felicidad = Math.max(0, felicidad - 5);
+                    // Si no lo atiendes, baja la felicidad
+                    felicidad = Math.max(0, felicidad - 4);
                     actualizarUI();
+                    guardar();
                 }
-            }, 5000); // Revisa cada 5 segundos
+            }, 6000); 
         }
 
         function pedirAlgo() {
-            const necesidades = ["sed", "crecido", "hambre"];
-            necesidadActual = necesidades[Math.floor(Math.random() * necesidades.length)];
+            const opciones = ["sed", "crecido", "hambre"];
+            necesidadActual = opciones[Math.floor(Math.random() * opciones.length)];
             
-            if (necesidadActual === "sed") {
-                document.getElementById('mensaje-peticion').innerText = "¡Tengo mucha sed! 💧";
-            } else if (necesidadActual === "crecido") {
-                document.getElementById('mensaje-peticion').innerText = "¡Mis ramas pesan! ✂️";
-            } else if (necesidadActual === "hambre") {
-                document.getElementById('mensaje-peticion').innerText = "¡Necesito vitaminas! 🧪";
-            }
-            document.getElementById('sub-mensaje').innerText = "¡Usa una herramienta!";
+            const msjs = {
+                sed: "¡Tengo mucha sed! 💧",
+                crecido: "¡Mis ramas pesan! ✂️",
+                hambre: "¡Necesito vitaminas! 🧪"
+            };
+            
+            document.getElementById('mensaje-peticion').innerText = msjs[necesidadActual];
+            document.getElementById('sub-mensaje').innerText = "¡Usa la herramienta correcta!";
+            document.getElementById('aviso-regalo').innerText = ""; // Limpiar mensaje de regalo viejo
         }
 
+        // 3. ATENDER Y DAR REGALOS
         function atender(tipo) {
             if (tipo === necesidadActual) {
-                felicidad = Math.min(100, felicidad + 20);
+                felicidad = Math.min(100, felicidad + 30); // Sube 30 de felicidad
                 necesidadActual = "ninguna";
+                
+                darRegalo();
+                
                 document.getElementById('mensaje-peticion').innerText = "¡Gracias! 😊";
                 document.getElementById('sub-mensaje').innerText = "El árbol descansa...";
                 actualizarUI();
-                localStorage.setItem('progresoPlantita', felicidad);
+                guardar();
+            } else if (necesidadActual !== "ninguna") {
+                // Opcional: Si usa la herramienta equivocada
+                document.getElementById('sub-mensaje').innerText = "Esa no es la herramienta correcta... 🤔";
             }
         }
 
-        function actualizarUI() {
-            // Actualiza la barra con color
-            document.getElementById('barra-felicidad').style.width = felicidad + "%";
+        // Lógica de matemáticas exacta para los regalos
+        function darRegalo() {
+            const suerte = Math.random(); // Número del 0.0 al 1.0
+            let regaloMensaje = "";
+
+            if (suerte <= 0.45) {
+                // 45% Hojas
+                hojas++;
+                regaloMensaje = "¡Te dio una Hoja! 🍃";
+            } else if (suerte <= 0.80) {
+                // 35% Flores (del 0.46 al 0.80)
+                flores++;
+                regaloMensaje = "¡Te dio una Flor! 🌸";
+            } else {
+                // 20% Manzanas (del 0.81 al 1.0)
+                manzanas++;
+                regaloMensaje = "¡Te dio una Manzana! 🍎";
+            }
             
-            // Cambia el texto del estado
+            document.getElementById('aviso-regalo').innerText = regaloMensaje;
+        }
+
+        // 4. ACTUALIZAR LO QUE SE VE EN PANTALLA
+        function actualizarUI() {
+            const barra = document.getElementById('barra-felicidad');
+            barra.style.width = felicidad + "%";
+            
+            // Cambia el color de la barra (Felicidad vs Tristeza)
+            if (felicidad > 50) {
+                barra.style.backgroundColor = "var(--feliz)";
+            } else {
+                barra.style.backgroundColor = "var(--triste)";
+            }
+
+            // Actualizar contadores
+            document.getElementById('txt-hojas').innerText = hojas;
+            document.getElementById('txt-flores').innerText = flores;
+            document.getElementById('txt-manzanas').innerText = manzanas;
+
+            // Actualizar imagen y texto
             const estado = document.getElementById('estado-texto');
             const img = document.getElementById('imagen-arbol');
 
-            if (felicidad > 70) {
+            if (felicidad > 60) {
                 estado.innerText = "¡Muy Feliz! ✨";
                 img.src = "arbol_feliz.png";
-            } else if (felicidad > 30) {
-                estado.innerText = "Está bien 🌿";
-                img.src = "arbol_feliz.png";
-            } else {
-                estado.innerText = "Está triste u.u ☁️";
+            } else if (felicidad > 20) {
+                estado.innerText = "Algo triste... 🍂";
                 img.src = "arbol_triste.png";
+            } else {
+                estado.innerText = "¡A punto de marchitarse! 🥀";
+                img.src = "arbol_triste.png"; 
             }
         }
 
+        // Arrancar el juego
         window.onload = cargar;
     </script>
 </body>
