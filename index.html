@@ -124,97 +124,63 @@
     </div>
 
     <script>
-        let flores = 0, hojas = 0, manzanas = 0;
-        let nivelEmocion = 5, esTriste = false, pedidoActual = "";
-        let tiempoEspera;
+        // 1. Variables del juego
+let vida = 100;
+let felicidad = 100;
 
-        const m_gracias = ["¡Gracias! Me siento genial 🩵", "¡Qué amable eres! ✨", "¡Justo lo que quería! 🥰"];
-        const m_tristes = ["Se me cayó una hoja... 🍂", "Me siento un poco mal 🥀", "Tal vez luego... 😢"];
+// 2. Función para GUARDAR el progreso en el celular
+function guardarProgreso() {
+    localStorage.setItem('vidaArbol', vida);
+    localStorage.setItem('felicidadArbol', felicidad);
+}
 
-        function actualizarVisual() {
-            const segmentos = document.querySelectorAll('.segmento');
-            segmentos.forEach((s, i) => {
-                s.className = 'segmento' + (i < nivelEmocion ? (esTriste ? ' azul' : ' verde') : '');
-            });
+// 3. Función para CARGAR el progreso cuando alguien entra
+function cargarProgreso() {
+    const vidaGuardada = localStorage.getItem('vidaArbol');
+    const felicidadGuardada = localStorage.getItem('felicidadArbol');
 
-            const imgFeliz = document.getElementById('img-feliz');
-            const imgTriste = document.getElementById('img-triste');
-            
-            if (esTriste) {
-                imgFeliz.style.opacity = '0';
-                imgTriste.style.opacity = '1';
-                document.getElementById('estado-texto').innerText = "Estado: Recuperándose... 💙";
-                document.getElementById('peticion').style.color = "#7d2e2e";
-            } else {
-                imgFeliz.style.opacity = '1';
-                imgTriste.style.opacity = '0';
-                document.getElementById('estado-texto').innerText = "Estado: ¡Feliz! ✨";
-                document.getElementById('peticion').style.color = "#2e7d32";
-            }
-        }
+    if (vidaGuardada !== null && felicidadGuardada !== null) {
+        vida = parseInt(vidaGuardada);
+        felicidad = parseInt(felicidadGuardada);
+        actualizarInterfaz();
+    }
+}
 
-        function pedirAlgo() {
-            if (pedidoActual !== "") return;
-            const opciones = ['Agua', 'Tijeras', 'Fertilizante'];
-            pedidoActual = opciones[Math.floor(Math.random() * opciones.length)];
-            
-            document.getElementById('peticion').innerText = "¡Necesito " + pedidoActual + "!";
-            document.getElementById('feedback').innerText = "¡Tienes 5 segundos! ⚡";
-            
-            tiempoEspera = setTimeout(() => {
-                if (pedidoActual !== "") fallar("¡Muy lento! ⏰");
-            }, 5000);
-        }
+// 4. Función para actualizar lo que se ve en pantalla
+function actualizarInterfaz() {
+    document.getElementById('stats').innerText = `Vida: ${vida}% | Felicidad: ${felicidad}%`;
+    
+    let imagen = document.getElementById('arbol');
+    if (vida > 50) {
+        imagen.src = 'arbol_feliz.png';
+    } else {
+        imagen.src = 'arbol_triste.png';
+    }
+}
 
-        function dar(objeto) {
-            if (pedidoActual === "") return;
-            clearTimeout(tiempoEspera);
+// 5. Acciones de los botones (Aquí llamamos a guardarProgreso)
+function regar() {
+    vida = Math.min(vida + 10, 100);
+    actualizarInterfaz();
+    guardarProgreso();
+}
 
-            if (objeto === pedidoActual) {
-                if (esTriste) {
-                    nivelEmocion--;
-                    if (nivelEmocion <= 0) { esTriste = false; nivelEmocion = 1; }
-                    document.getElementById('feedback').innerText = "Gracias por ayudarme a sanar 💙";
-                } else {
-                    if (nivelEmocion < 5) nivelEmocion++;
-                    darRegalo();
-                }
-                pedidoActual = "";
-                document.getElementById('peticion').innerText = "✨ ¡Conseguido! ✨";
-            } else {
-                fallar("¡Esa herramienta no era! ❌");
-            }
-            actualizarVisual();
-        }
+function fertilizar() {
+    felicidad = Math.min(felicidad + 15, 100);
+    actualizarInterfaz();
+    guardarProgreso();
+}
 
-        function fallar(motivo) {
-            if (!esTriste) {
-                nivelEmocion--;
-                if (nivelEmocion <= 0) { esTriste = true; nivelEmocion = 1; }
-            } else {
-                if (nivelEmocion < 5) nivelEmocion++;
-            }
-            document.getElementById('feedback').innerText = motivo + " " + m_tristes[Math.floor(Math.random()*m_tristes.length)];
-            document.getElementById('peticion').innerText = "¡Oh no! 🥀";
-            pedidoActual = "";
-            actualizarVisual();
-        }
+function podar() {
+    vida = Math.min(vida + 5, 100);
+    felicidad = Math.max(felicidad - 5, 0);
+    actualizarInterfaz();
+    guardarProgreso();
+}
 
-        function darRegalo() {
-            let suerte = Math.floor(Math.random() * 100) + 1;
-            let regalo = "";
-            if (suerte <= 50) { 
-                hojas++; document.getElementById('c-hoja').innerText = hojas; regalo = "una 🍃"; 
-            } else if (suerte <= 85) { 
-                flores++; document.getElementById('c-flor').innerText = flores; regalo = "una 🌸"; 
-            } else { 
-                manzanas++; document.getElementById('c-manzana').innerText = manzanas; regalo = "una 🍎"; 
-            }
-            document.getElementById('feedback').innerText = m_gracias[Math.floor(Math.random()*m_gracias.length)] + " Toma " + regalo;
-        }
-
-        setInterval(pedirAlgo, 15000); // Intenta pedir cada 15 segundos
-        actualizarVisual();
+// 6. Ejecutar la carga apenas abra la página
+window.onload = cargarProgreso;
+        
     </script>
 </body>
 </html>
